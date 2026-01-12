@@ -19,6 +19,7 @@ import { URLDownloader } from "@/components/download";
 import { PlaylistEditor } from "@/components/playlist";
 import { PlayerProvider, usePlayer } from "@/context/PlayerContext";
 import { demoSongs, demoPlaylists } from "@/data/musicData";
+import { useSupabaseMusic } from "@/hooks/useSupabaseMusic"; // Added hook
 import { useRecommendations } from "@/lib/recommendationEngine";
 import { usePWA } from "@/hooks/usePWA";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,9 @@ const HomeContent: React.FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { isInstallable, installApp, isOnline } = usePWA();
 
+  // Real Data Hook
+  const { songs: realSongs, isLoadingSongs } = useSupabaseMusic();
+
   // Auth Check
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -57,22 +61,8 @@ const HomeContent: React.FC = () => {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
-  const { recommendations, isLoading, refreshRecommendations } = useRecommendations(demoSongs);
+  const { recommendations, isLoading: isLoadingRecs } = useRecommendations(realSongs);
   const { downloadedSongs, history } = useLocalMusic();
-
-  useEffect(() => {
-    if (!user) {
-      setPlaylists(demoPlaylists);
-    } else {
-      setPlaylists([]);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!currentSong) {
-      playSong(demoSongs[0]);
-    }
-  }, []);
 
   // GSAP page load animations
   useEffect(() => {
@@ -117,8 +107,20 @@ const HomeContent: React.FC = () => {
     });
   };
 
-  const featuredSong = demoSongs[4];
-  const downloadedCount = demoSongs.filter(s => s.isDownloaded).length;
+  const featuredSong = realSongs[0];
+  const downloadedCount = downloadedSongs.length; // Use real download count
+
+  if (isLoadingSongs) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          {/* Simple loading indicator */}
+          <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground animate-pulse">Loading library...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="min-h-screen bg-background">
@@ -164,188 +166,196 @@ const HomeContent: React.FC = () => {
             <ConnectionStatus isOnline={isOnline} downloadCount={downloadedCount} />
           </div>
 
-          {/* Show Featured/Demo content ONLY if NOT logged in, OR if user has no data (optional, but per request 'remove fake data') */}
-          {!user ? (
-            <>
-              <motion.div
-                ref={heroRef}
-                style={{ opacity: heroOpacity, scale: heroScale }}
-                className="mb-10 stagger-section"
+          <motion.div
+            ref={heroRef}
+            style={{ opacity: heroOpacity, scale: heroScale }}
+            className="mb-10 stagger-section"
+          >
+            {featuredSong ? (
+              <FeaturedCard song={featuredSong} />
+            ) : (
+              <div className="relative group overflow-hidden p-8 md:p-12 rounded-[2rem] glass-card border-white/10 text-center space-y-6">
+                {/* Ambient Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-all duration-1000" />
+
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 4, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+                  className="relative z-10 w-24 h-24 mx-auto glass-card rounded-full flex items-center justify-center border border-white/20 shadow-xl group-hover:scale-110 transition-transform duration-500"
+                >
+                  <Youtube className="w-10 h-10 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.8)]" />
+                </motion.div>
+
+                <div className="relative z-10 space-y-2 max-w-lg mx-auto">
+                  <h2 className="text-3xl font-display font-bold tracking-tight text-white drop-shadow-sm">
+                    Start Your Journey
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Your library is waiting to be filled. Search for any song on YouTube to begin.
+                  </p>
+                </div>
+
+                <div className="relative z-10 flex justify-center pt-2">
+                  <Button
+                    onClick={() => setShowYouTubeSearch(true)}
+                    variant="glow"
+                    size="lg"
+                    className="gap-2 h-12 px-8 text-base shadow-glow-primary hover:scale-105 transition-transform"
+                  >
+                    <Youtube className="w-5 h-5" />
+                    Search YouTube
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Quick Action Buttons */}
+          <div className="stagger-section mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <Button
+              onClick={() => setShowYouTubeSearch(true)}
+              variant="glass"
+              className="flex items-center justify-center gap-2 py-5 bg-destructive/10 hover:bg-destructive/20 border-destructive/20"
+            >
+              <Youtube className="w-5 h-5 text-destructive" />
+              <span>YouTube</span>
+            </Button>
+            {/* ... other buttons ... */}
+            <Button
+              onClick={() => setShowURLDownloader(true)}
+              variant="glass"
+              className="flex items-center justify-center gap-2 py-5"
+            >
+              <Download className="w-5 h-5 text-primary" />
+              <span>Download</span>
+            </Button>
+            <Button
+              onClick={() => setShowPlaylistEditor(true)}
+              variant="glass"
+              className="flex items-center justify-center gap-2 py-5"
+            >
+              <Plus className="w-5 h-5 text-accent" />
+              <span>Playlist</span>
+            </Button>
+            <Link to="/recently-played" className="w-full">
+              <Button
+                variant="glass"
+                className="w-full flex items-center justify-center gap-2 py-5"
               >
-                <FeaturedCard song={featuredSong} />
-              </motion.div>
+                <Clock className="w-5 h-5 text-secondary" />
+                <span>History</span>
+              </Button>
+            </Link>
+            <Link to="/profile" className="w-full">
+              <Button
+                variant="glass"
+                className="w-full flex items-center justify-center gap-2 py-5"
+              >
+                <User className="w-5 h-5 text-accent" />
+                <span>Profile</span>
+              </Button>
+            </Link>
+            <Link to="/settings" className="w-full">
+              <Button
+                variant="glass"
+                className="w-full flex items-center justify-center gap-2 py-5"
+              >
+                <Settings className="w-5 h-5 text-muted-foreground" />
+                <span>Settings</span>
+              </Button>
+            </Link>
+          </div>
 
-              {/* Quick Action Buttons */}
-              <div className="stagger-section mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                <Button
-                  onClick={() => setShowYouTubeSearch(true)}
-                  variant="glass"
-                  className="flex items-center justify-center gap-2 py-5 bg-destructive/10 hover:bg-destructive/20 border-destructive/20"
-                >
-                  <Youtube className="w-5 h-5 text-destructive" />
-                  <span>YouTube</span>
-                </Button>
-                {/* ... other buttons ... */}
-                <Button
-                  onClick={() => setShowURLDownloader(true)}
-                  variant="glass"
-                  className="flex items-center justify-center gap-2 py-5"
-                >
-                  <Download className="w-5 h-5 text-primary" />
-                  <span>Download</span>
-                </Button>
-                <Button
-                  onClick={() => setShowPlaylistEditor(true)}
-                  variant="glass"
-                  className="flex items-center justify-center gap-2 py-5"
-                >
-                  <Plus className="w-5 h-5 text-accent" />
-                  <span>Playlist</span>
-                </Button>
-                <Link to="/recently-played" className="w-full">
-                  <Button
-                    variant="glass"
-                    className="w-full flex items-center justify-center gap-2 py-5"
-                  >
-                    <Clock className="w-5 h-5 text-secondary" />
-                    <span>History</span>
-                  </Button>
-                </Link>
-                <Link to="/profile" className="w-full">
-                  <Button
-                    variant="glass"
-                    className="w-full flex items-center justify-center gap-2 py-5"
-                  >
-                    <User className="w-5 h-5 text-accent" />
-                    <span>Profile</span>
-                  </Button>
-                </Link>
-                <Link to="/settings" className="w-full">
-                  <Button
-                    variant="glass"
-                    className="w-full flex items-center justify-center gap-2 py-5"
-                  >
-                    <Settings className="w-5 h-5 text-muted-foreground" />
-                    <span>Settings</span>
-                  </Button>
-                </Link>
-              </div>
+          <div className="stagger-section">
+            <Section title="How are you feeling?" className="mb-8">
+              <MoodSelector selected={selectedMood} onSelect={setSelectedMood} />
+            </Section>
+          </div>
 
-              <div className="stagger-section">
-                <Section title="How are you feeling?" className="mb-8">
-                  <MoodSelector selected={selectedMood} onSelect={setSelectedMood} />
-                </Section>
-              </div>
+          <div className="stagger-section">
+            <QuickActions />
+          </div>
 
-              <div className="stagger-section">
-                <QuickActions />
-              </div>
-
-              {/* AI Recommendations */}
-              <div className="stagger-section">
-                <RecommendationSection
-                  recommendations={recommendations}
-                  isLoading={isLoading}
-                  onRefresh={refreshRecommendations}
-                />
-              </div>
-
-              <div className="stagger-section">
-                <Section
-                  title="Your Playlists"
-                  subtitle="Your music collections"
-                  showViewAll
-                  action={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowPlaylistEditor(true)}
-                      className="flex items-center gap-1"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Create
-                    </Button>
-                  }
-                >
-                  <HorizontalScroll>
-                    {playlists.map((playlist, index) => (
-                      <PlaylistCard key={playlist.id} playlist={playlist} index={index} />
-                    ))}
-                  </HorizontalScroll>
-                </Section>
-              </div>
-
-              <div className="stagger-section">
-                <Section title="Recently Played" subtitle="Pick up where you left off" showViewAll>
-                  {user && history.length > 0 ? (
-                    <Grid columns={4}>
-                      {history.slice(0, 4).map((song, index) => (
-                        <SongCard key={song.id} song={song} index={index} />
-                      ))}
-                    </Grid>
-                  ) : !user ? (
-                    <Grid columns={4}>
-                      {demoSongs.slice(0, 4).map((song, index) => (
-                        <SongCard key={song.id} song={song} index={index} />
-                      ))}
-                    </Grid>
-                  ) : (
-                    <p className="text-muted-foreground">No recent history.</p>
-                  )}
-                </Section>
-              </div>
-
-              <div className="stagger-section">
-                <Section title="Trending Now" subtitle="What everyone's listening to" showViewAll>
-                  <div className="glass-card rounded-2xl overflow-hidden">
-                    {demoSongs.map((song, index) => (
-                      <SongCard key={song.id} song={song} index={index} showIndex compact />
-                    ))}
-                  </div>
-                </Section>
-              </div>
-            </>
-          ) : (
-            // LOGGED IN STATE - Clean Slate (or Real Data in future)
-            <div className="space-y-8">
-              <div className="flex items-center justify-center h-[50vh] flex-col text-muted-foreground space-y-4">
-                <div className="p-6 rounded-full bg-white/5">
-                  <User className="w-12 h-12 opacity-50" />
-                </div>
-                <p>Your library is empty. Start adding music!</p>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Button onClick={() => setShowYouTubeSearch(true)} variant="glow">
-                    <Youtube className="mr-2 h-4 w-4" /> Search YouTube
-                  </Button>
-                  <Button onClick={() => setShowURLDownloader(true)} variant="outline">
-                    <Download className="mr-2 h-4 w-4" /> Import URL
-                  </Button>
-                </div>
-              </div>
+          {/* AI Recommendations */}
+          {realSongs.length > 0 && (
+            <div className="stagger-section">
+              <RecommendationSection
+                recommendations={recommendations}
+                isLoading={isLoadingRecs}
+                onRefresh={() => { }} // Hook handles refresh internally mostly
+              />
             </div>
           )}
 
           <div className="stagger-section">
-            <Section title="Downloaded" subtitle="Available offline" showViewAll>
-              {user ? (
-                downloadedSongs.length > 0 ? (
-                  <Grid columns={5}>
-                    {downloadedSongs.map((song, index) => (
-                      <SongCard key={song.id} song={song} index={index} />
-                    ))}
-                  </Grid>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No downloaded songs yet.</p>
-                  </div>
-                )
-              ) : (
-                <Grid columns={5}>
-                  {demoSongs.filter(s => s.isDownloaded).map((song, index) => (
+            <Section
+              title="Your Playlists"
+              subtitle="Your music collections"
+              showViewAll
+              action={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPlaylistEditor(true)}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create
+                </Button>
+              }
+            >
+              <HorizontalScroll>
+                {playlists.map((playlist, index) => (
+                  <PlaylistCard key={playlist.id} playlist={playlist} index={index} />
+                ))}
+                {playlists.length === 0 && (
+                  <p className="text-muted-foreground p-4">No playlists yet.</p>
+                )}
+              </HorizontalScroll>
+            </Section>
+          </div>
+
+          <div className="stagger-section">
+            <Section title="Recently Played" subtitle="Pick up where you left off" showViewAll>
+              {history.length > 0 ? (
+                <Grid columns={4}>
+                  {history.slice(0, 4).map((song, index) => (
                     <SongCard key={song.id} song={song} index={index} />
                   ))}
                 </Grid>
+              ) : (
+                <p className="text-muted-foreground">No recent history.</p>
+              )}
+            </Section>
+          </div>
+
+          <div className="stagger-section">
+            <Section title="Library Songs" subtitle="All added songs" showViewAll>
+              {realSongs.length > 0 ? (
+                <div className="glass-card rounded-2xl overflow-hidden p-4 grid gap-2">
+                  {realSongs.slice(0, 10).map((song, index) => (
+                    <SongCard key={song.id} song={song} index={index} showIndex compact />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No songs in library.</p>
+              )}
+            </Section>
+          </div>
+
+          <div className="stagger-section">
+            <Section title="Downloaded" subtitle="Available offline" showViewAll>
+              {downloadedSongs.length > 0 ? (
+                <Grid columns={5}>
+                  {downloadedSongs.map((song, index) => (
+                    <SongCard key={song.id} song={song} index={index} />
+                  ))}
+                </Grid>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No downloaded songs yet.</p>
+                </div>
               )}
             </Section>
           </div>
@@ -372,7 +382,7 @@ const HomeContent: React.FC = () => {
       <PlaylistEditor
         isOpen={showPlaylistEditor}
         onClose={() => setShowPlaylistEditor(false)}
-        availableSongs={demoSongs}
+        availableSongs={realSongs}
         onSave={handleSavePlaylist}
       />
     </div>

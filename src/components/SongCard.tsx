@@ -18,11 +18,11 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
-export const SongCard: React.FC<SongCardProps> = ({ 
-  song, 
-  index = 0, 
+export const SongCard: React.FC<SongCardProps> = ({
+  song,
+  index = 0,
   showIndex = false,
-  compact = false 
+  compact = false
 }) => {
   const { currentSong, isPlaying, playSong, pauseSong, resumeSong } = usePlayer();
   const isActive = currentSong?.id === song.id;
@@ -62,7 +62,7 @@ export const SongCard: React.FC<SongCardProps> = ({
             )}
           </span>
         )}
-        
+
         <div className="relative w-10 h-10 rounded-md overflow-hidden flex-shrink-0">
           <img
             src={song.thumbnail}
@@ -126,10 +126,10 @@ export const SongCard: React.FC<SongCardProps> = ({
           alt={song.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+
         {/* Play button */}
         <motion.button
           onClick={handlePlayClick}
@@ -137,10 +137,11 @@ export const SongCard: React.FC<SongCardProps> = ({
           whileHover={{ scale: 1.1 }}
           className={cn(
             "absolute bottom-3 right-3 p-4 rounded-full bg-primary text-primary-foreground shadow-xl transition-all duration-300 glow-primary",
-            isActive 
-              ? "scale-100 opacity-100" 
+            isActive
+              ? "scale-100 opacity-100"
               : "scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100"
           )}
+          whileTap={{ scale: 0.9 }} // Add tactile feedback for mobile
         >
           {isActive && isPlaying ? (
             <Pause className="w-5 h-5" />

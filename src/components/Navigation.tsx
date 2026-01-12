@@ -178,9 +178,9 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
       <motion.nav
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+        transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.5 }}
         className={cn(
-          "lg:hidden fixed left-6 z-50 glass-card px-4 py-2 rounded-full flex items-center gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.4)] border-white/10 backdrop-blur-3xl bg-black/60 transition-all duration-500 ease-out",
+          "lg:hidden fixed left-4 right-4 z-50 glass-card h-16 rounded-full flex items-center justify-around shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/10 backdrop-blur-xl bg-black/40 transition-all duration-500 ease-out",
           currentSong ? "bottom-24" : "bottom-6"
         )}
       >
@@ -189,28 +189,28 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
             key={item.id}
             to={item.path}
             onClick={() => onTabChange(item.id)}
-            className="relative group flex flex-col items-center justify-center w-12 h-12 rounded-full transition-all duration-300"
+            className="relative group flex flex-col items-center justify-center w-full h-full"
           >
-            {/* Active Slide Background */}
+            {/* Active Indicator - Glowing Dot */}
             {activeTab === item.id && (
               <motion.div
-                layoutId="nav-slide-bg"
-                className="absolute inset-0 bg-primary/20 rounded-full"
+                layoutId="nav-indicator-mobile"
+                className="absolute -top-1 w-1 h-1 rounded-full bg-primary shadow-[0_0_10px_var(--primary)]"
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
 
             <motion.div
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.2 }}
               whileTap={{ scale: 0.9 }}
               className={cn(
-                "relative z-10 transition-all duration-300",
+                "relative z-10 transition-all duration-300 flex flex-col items-center gap-1",
                 activeTab === item.id
-                  ? "text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.8)]"
-                  : "text-muted-foreground hover:text-white"
+                  ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.6)]"
+                  : "text-muted-foreground/60"
               )}
             >
-              <item.icon className={cn("w-5 h-5", activeTab === item.id && "fill-current/20")} />
+              <item.icon className={cn("w-6 h-6", activeTab === item.id && "fill-current/20")} />
             </motion.div>
 
             <span className="sr-only">{item.label}</span>
