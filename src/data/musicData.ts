@@ -1,5 +1,8 @@
 import { Song, Playlist, UserProfile } from "@/types/music";
 
+// Initial check implies I should double check the type definition.
+// Moving to view types/music.ts first to avoid compilation errors.
+
 export const demoSongs: Song[] = [
   {
     id: "1",
@@ -8,9 +11,10 @@ export const demoSongs: Song[] = [
     album: "Cosmic Waves",
     duration: 234,
     thumbnail: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
-    source: "youtube",
-    youtubeId: "dQw4w9WgXcQ",
-    isDownloaded: true,
+    source: "online", // Changed to online for immediate testing
+    // youtubeId: "dQw4w9WgXcQ",
+    isDownloaded: false,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   },
   {
     id: "2",
@@ -19,9 +23,10 @@ export const demoSongs: Song[] = [
     album: "Retrowave",
     duration: 198,
     thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=400&fit=crop",
-    source: "youtube",
-    youtubeId: "abc123",
+    source: "online",
+    // youtubeId: "abc123",
     isDownloaded: false,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
   },
   {
     id: "3",
@@ -32,6 +37,7 @@ export const demoSongs: Song[] = [
     thumbnail: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&h=400&fit=crop",
     source: "online",
     isDownloaded: true,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
   },
   {
     id: "4",
@@ -40,9 +46,9 @@ export const demoSongs: Song[] = [
     album: "Digital Dreams",
     duration: 215,
     thumbnail: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=400&fit=crop",
-    source: "youtube",
-    youtubeId: "xyz789",
+    source: "online",
     isDownloaded: false,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
   },
   {
     id: "5",
@@ -51,9 +57,9 @@ export const demoSongs: Song[] = [
     album: "Northern Lights",
     duration: 289,
     thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=400&fit=crop",
-    source: "youtube",
-    youtubeId: "star123",
+    source: "online",
     isDownloaded: true,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3"
   },
   {
     id: "6",
@@ -64,6 +70,7 @@ export const demoSongs: Song[] = [
     thumbnail: "https://images.unsplash.com/photo-1493676304819-0d7a8d026dcf?w=400&h=400&fit=crop",
     source: "online",
     isDownloaded: false,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
   },
   {
     id: "7",
@@ -74,6 +81,7 @@ export const demoSongs: Song[] = [
     thumbnail: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=400&h=400&fit=crop",
     source: "online",
     isDownloaded: true,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3"
   },
   {
     id: "8",
@@ -82,9 +90,9 @@ export const demoSongs: Song[] = [
     album: "Cinematic",
     duration: 245,
     thumbnail: "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&h=400&fit=crop",
-    source: "youtube",
-    youtubeId: "epic456",
+    source: "online",
     isDownloaded: false,
+    streamUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
   },
 ];
 

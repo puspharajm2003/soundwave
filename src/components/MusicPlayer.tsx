@@ -17,6 +17,7 @@ import {
   Download
 } from "lucide-react";
 import { usePlayer } from "@/context/PlayerContext";
+import { useSettings } from "@/context/SettingsContext"; // Added import
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,8 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
     toggleShuffle,
     toggleRepeat,
   } = usePlayer();
+
+  const { settings } = useSettings(); // Get settings
 
   const [isMuted, setIsMuted] = React.useState(false);
   const [prevVolume, setPrevVolume] = React.useState(volume);
@@ -99,10 +102,16 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background" />
 
-          {/* Content */}
-          <div className="relative z-10 flex flex-col h-full p-6 md:p-12">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+          {/* Content optimized for different layouts */}
+          <div className={cn(
+            "relative z-10 flex flex-col h-full",
+            settings.playerLayout.style === "compact" ? "p-6" : "p-6 md:p-12"
+          )}>
+            {/* Header - Hidden in Minimal/Immersive unless hovered/interacted */}
+            <div className={cn(
+              "flex items-center justify-between mb-8",
+              settings.playerLayout.style === "immersive" && "opacity-0 hover:opacity-100 transition-opacity"
+            )}>
               <button
                 onClick={onToggleExpand}
                 className="p-2 glass-button rounded-full"
@@ -110,20 +119,23 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
                 <ChevronDown className="w-6 h-6" />
               </button>
               <span className="text-sm text-muted-foreground uppercase tracking-widest">
-                Now Playing
+                {settings.playerLayout.style === "minimal" ? "" : "Now Playing"}
               </span>
               <button className="p-2 glass-button rounded-full">
                 <ListMusic className="w-6 h-6" />
               </button>
             </div>
 
-            {/* Album Art */}
+            {/* Album Art - Sizes based on layout */}
             <div className="flex-1 flex items-center justify-center py-8">
               <motion.div
                 animate={{ rotate: isPlaying ? 360 : 0 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 className={cn(
-                  "relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full overflow-hidden album-glow",
+                  "relative rounded-full overflow-hidden album-glow",
+                  settings.playerLayout.albumArtSize === "small" && "w-48 h-48 md:w-64 md:h-64",
+                  settings.playerLayout.albumArtSize === "medium" && "w-64 h-64 md:w-80 md:h-80",
+                  settings.playerLayout.albumArtSize === "large" && "w-72 h-72 md:w-96 md:h-96 lg:w-[30rem] lg:h-[30rem]",
                   !isPlaying && "animate-none"
                 )}
                 style={{ animationPlayState: isPlaying ? "running" : "paused" }}
@@ -160,38 +172,60 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
               </motion.p>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <Slider
-                value={[progressPercent]}
-                max={100}
-                step={0.1}
-                onValueChange={([val]) => setProgress((val / 100) * currentSong.duration)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                <span>{formatTime(progress)}</span>
-                <span>{formatTime(currentSong.duration)}</span>
+            {/* Progress and Waveform */}
+            <div className="mb-6 space-y-4">
+              {settings.playerLayout.showWaveform && (
+                <div className="h-12 w-full flex items-center justify-center gap-1 opacity-50">
+                  {/* Placeholder for waveform visualization */}
+                  {Array.from({ length: 40 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-primary rounded-full transition-all duration-300"
+                      style={{
+                        height: `${Math.max(20, Math.random() * 100)}%`,
+                        opacity: isPlaying ? 1 : 0.3
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <Slider
+                  value={[progressPercent]}
+                  max={100}
+                  step={0.1}
+                  onValueChange={([val]) => setProgress((val / 100) * currentSong.duration)}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                  <span>{formatTime(progress)}</span>
+                  <span>{formatTime(currentSong.duration)}</span>
+                </div>
               </div>
             </div>
 
-            {/* Controls */}
+            {/* Controls - Hide extra controls in Minimal mode */}
             <div className="flex items-center justify-center gap-6 mb-8">
-              <button
-                onClick={toggleShuffle}
-                className={cn(
-                  "p-3 rounded-full transition-all",
-                  shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Shuffle className="w-5 h-5" />
-              </button>
+              {settings.playerLayout.style !== "minimal" && (
+                <button
+                  onClick={toggleShuffle}
+                  className={cn(
+                    "p-3 rounded-full transition-all",
+                    shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Shuffle className="w-5 h-5" />
+                </button>
+              )}
+
               <button
                 onClick={prevSong}
                 className="p-3 text-foreground hover:text-primary transition-colors"
               >
                 <SkipBack className="w-8 h-8" />
               </button>
+
               <button
                 onClick={isPlaying ? pauseSong : resumeSong}
                 className="p-6 bg-primary text-primary-foreground rounded-full glow-primary hover:scale-105 transition-transform"
@@ -202,28 +236,32 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
                   <Play className="w-8 h-8 ml-1" />
                 )}
               </button>
+
               <button
                 onClick={nextSong}
                 className="p-3 text-foreground hover:text-primary transition-colors"
               >
                 <SkipForward className="w-8 h-8" />
               </button>
-              <button
-                onClick={toggleRepeat}
-                className={cn(
-                  "p-3 rounded-full transition-all",
-                  repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {repeat === "one" ? (
-                  <Repeat1 className="w-5 h-5" />
-                ) : (
-                  <Repeat className="w-5 h-5" />
-                )}
-              </button>
+
+              {settings.playerLayout.style !== "minimal" && (
+                <button
+                  onClick={toggleRepeat}
+                  className={cn(
+                    "p-3 rounded-full transition-all",
+                    repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {repeat === "one" ? (
+                    <Repeat1 className="w-5 h-5" />
+                  ) : (
+                    <Repeat className="w-5 h-5" />
+                  )}
+                </button>
+              )}
             </div>
 
-            {/* Bottom Actions */}
+            {/* Bottom Actions - Hidden in specific layouts if needed */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
@@ -235,28 +273,33 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ isExpanded, onToggleEx
                 >
                   <Heart className={cn("w-6 h-6", isLiked && "fill-current")} />
                 </button>
-                <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-                  <Download className="w-6 h-6" />
-                </button>
+                {settings.playerLayout.style !== "minimal" && (
+                  <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
+                    <Download className="w-6 h-6" />
+                  </button>
+                )}
               </div>
-              <div className="flex items-center gap-3 w-32">
-                <button onClick={toggleMute} className="text-muted-foreground hover:text-foreground">
-                  {volume === 0 || isMuted ? (
-                    <VolumeX className="w-5 h-5" />
-                  ) : (
-                    <Volume2 className="w-5 h-5" />
-                  )}
-                </button>
-                <Slider
-                  value={[volume]}
-                  max={100}
-                  onValueChange={([val]) => {
-                    setVolume(val);
-                    setIsMuted(false);
-                  }}
-                  className="flex-1"
-                />
-              </div>
+
+              {settings.playerLayout.style !== "minimal" && (
+                <div className="flex items-center gap-3 w-32">
+                  <button onClick={toggleMute} className="text-muted-foreground hover:text-foreground">
+                    {volume === 0 || isMuted ? (
+                      <VolumeX className="w-5 h-5" />
+                    ) : (
+                      <Volume2 className="w-5 h-5" />
+                    )}
+                  </button>
+                  <Slider
+                    value={[volume]}
+                    max={100}
+                    onValueChange={([val]) => {
+                      setVolume(val);
+                      setIsMuted(false);
+                    }}
+                    className="flex-1"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </motion.div>

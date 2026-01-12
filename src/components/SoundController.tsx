@@ -23,7 +23,7 @@ export const SoundController: React.FC = () => {
         audioRef.current = audio;
 
         const handleEnded = () => {
-            if (currentSong) saveHistory(currentSong.id);
+            if (currentSong) saveHistory(currentSong);
             nextSong();
         };
 
@@ -96,13 +96,15 @@ export const SoundController: React.FC = () => {
 
             let src = "";
 
-            // Check if offline/downloaded
+            // Check if offline/downloaded - ONLY if truly downloaded
             if (currentSong.isDownloaded) {
                 try {
-                    const blob = await getSongData(currentSong.id);
-                    if (blob) {
-                        src = URL.createObjectURL(blob);
+                    const offlineData = await getSongData(currentSong.id);
+                    if (offlineData?.blob) {
+                        src = URL.createObjectURL(offlineData.blob);
                     } else {
+                        // Mark as not downloaded if blob is missing to prevent future attempts? 
+                        // For now just warn and fall back
                         console.warn("Downloaded song structure found but blob missing in DB.");
                     }
                 } catch (e) {
@@ -112,7 +114,10 @@ export const SoundController: React.FC = () => {
 
             // If no offline blob, check for streamUrl
             if (!src) {
-                if ((currentSong as any).streamUrl) {
+                if (currentSong.streamUrl) {
+                    src = currentSong.streamUrl;
+                } else if ((currentSong as any).streamUrl) {
+                    // Fallback for legacy typings if any
                     src = (currentSong as any).streamUrl;
                 } else {
                     // Try to get YouTube ID from property OR extract from ID
@@ -123,8 +128,8 @@ export const SoundController: React.FC = () => {
 
                     if (videoId) {
                         try {
-                            const { toast } = await import("sonner");
-                            // toast.loading(`Loading stream for: ${currentSong.title}`);
+                            // Only load toast if we are actually fetching from network (slow)
+                            // const { toast } = await import("sonner");
 
                             const { supabase } = await import("@/integrations/supabase/client");
                             const { data, error } = await supabase.functions.invoke('youtube-audio', {
@@ -135,9 +140,7 @@ export const SoundController: React.FC = () => {
                                 src = data.data.audioUrl;
                             } else {
                                 console.error("Stream fetch failed:", error || data?.error);
-                                toast.error("Could not load audio stream", {
-                                    description: "Please check your connection or try another song."
-                                });
+                                // Optional: Notify user but avoid spamming if it's a playlist skip
                             }
                         } catch (err) {
                             console.error("Error fetching audio stream:", err);
@@ -156,6 +159,13 @@ export const SoundController: React.FC = () => {
                                 if (error.name !== 'NotAllowedError') {
                                     console.error("Playback failed:", error);
                                     pauseSong();
+                                } else {
+                                    // Browser policy blocked auto-play. 
+                                    // Pause UI to match state, but don't error out loudly.
+                                    console.log("Auto-play prevented by browser policy");
+                                    pauseSong();
+                                    const { toast } = require("sonner");
+                                    toast.info("Click play to start audio");
                                 }
                             });
                         }
@@ -164,6 +174,7 @@ export const SoundController: React.FC = () => {
                     }
                 }
             } else {
+                console.error("No valid audio source found for:", currentSong.title);
                 if (isPlaying) pauseSong();
             }
         };

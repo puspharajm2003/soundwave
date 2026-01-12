@@ -8,6 +8,7 @@ export interface Song {
   source: "youtube" | "online" | "local";
   youtubeId?: string;
   isDownloaded: boolean;
+  streamUrl?: string;
   waveform?: number[];
 }
 
