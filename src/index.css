@@ -1,0 +1,181 @@
+@import "@fontsource/outfit/400.css";
+@import "@fontsource/outfit/500.css";
+@import "@fontsource/outfit/600.css";
+@import "@fontsource/outfit/700.css";
+@import "@fontsource/syne/700.css";
+@import "@fontsource/syne/800.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 15% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 240 12% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 240 12% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 187 100% 50%;
+    --primary-foreground: 240 15% 4%;
+
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 240 8% 15%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 280 100% 65%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 8% 18%;
+    --input: 240 8% 15%;
+    --ring: 187 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom music player tokens */
+    --glow-primary: 187 100% 50%;
+    --glow-accent: 280 100% 65%;
+    --glass: 240 12% 12%;
+    --glass-border: 240 10% 20%;
+    --gradient-start: 187 100% 50%;
+    --gradient-end: 280 100% 65%;
+    
+    --sidebar-background: 240 12% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary-foreground: 240 15% 4%;
+    --sidebar-accent: 240 10% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 240 8% 18%;
+    --sidebar-ring: 187 100% 50%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 15% 10%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 240 15% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 15% 10%;
+
+    --primary: 187 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 15% 10%;
+
+    --muted: 240 5% 90%;
+    --muted-foreground: 240 8% 45%;
+
+    --accent: 280 100% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 85%;
+    --input: 240 5% 90%;
+    --ring: 187 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-glass/40 backdrop-blur-xl border border-glass-border rounded-2xl;
+  }
+
+  .glass-button {
+    @apply bg-glass/60 backdrop-blur-md border border-glass-border hover:bg-glass/80 transition-all duration-300;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 30px hsl(var(--glow-primary) / 0.3),
+                0 0 60px hsl(var(--glow-primary) / 0.15);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 30px hsl(var(--glow-accent) / 0.3),
+                0 0 60px hsl(var(--glow-accent) / 0.15);
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  .gradient-border {
+    @apply relative;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+                linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    border: 2px solid transparent;
+  }
+
+  .neon-line {
+    @apply h-px bg-gradient-to-r from-transparent via-primary to-transparent;
+  }
+
+  .album-glow {
+    box-shadow: 0 20px 80px -20px hsl(var(--primary) / 0.5);
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl;
+  }
+
+  .music-wave {
+    @apply flex items-end gap-0.5 h-4;
+  }
+
+  .music-wave span {
+    @apply w-1 bg-primary rounded-full animate-music-wave;
+  }
+
+  .music-wave span:nth-child(1) { animation-delay: 0s; }
+  .music-wave span:nth-child(2) { animation-delay: 0.2s; }
+  .music-wave span:nth-child(3) { animation-delay: 0.4s; }
+  .music-wave span:nth-child(4) { animation-delay: 0.1s; }
+  .music-wave span:nth-child(5) { animation-delay: 0.3s; }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}

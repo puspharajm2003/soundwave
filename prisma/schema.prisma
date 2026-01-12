@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  playlists Playlist[]
+  likedSongs LikedSong[]
+  history    History[]
+}
+
+model Song {
+  id          String   @id @default(uuid())
+  title       String
+  artist      String
+  album       String?
+  coverUrl    String
+  audioUrl    String
+  duration    Int      // in seconds
+  createdAt   DateTime @default(now())
+
+  likedBy     LikedSong[]
+  inPlaylists PlaylistSong[]
+  inHistory   History[]
+}
+
+model Playlist {
+  id        String   @id @default(uuid())
+  title     String
+  coverUrl  String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songs     PlaylistSong[]
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  playlistId String
+  songId     String
+  addedAt    DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, songId])
+}
+
+model LikedSong {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  likedAt   DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+}
+
+model History {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  playedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+}
